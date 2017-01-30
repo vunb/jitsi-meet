@@ -2,7 +2,6 @@
 
 require('babel-polyfill'); // Define Object.assign() from ES6 in ES5.
 
-var HasteResolverPlugin = require('haste-resolver-webpack-plugin');
 var process = require('process');
 var webpack = require('webpack');
 
@@ -20,7 +19,10 @@ var minimize
         || process.argv.indexOf('--optimize-minimize') !== -1;
 var node_modules = __dirname + '/node_modules/';
 var plugins = [
-    new HasteResolverPlugin()
+    new webpack.LoaderOptionsPlugin({
+        debug: !minimize,
+        minimize: minimize
+    })
 ];
 var strophe = /\/node_modules\/strophe(js-plugins)?\/.*\.js$/;
 
@@ -68,22 +70,28 @@ var config = {
     },
     devtool: 'source-map',
     module: {
-        loaders: [ {
+        rules: [ {
             // Transpile ES2015 (aka ES6) to ES5. Accept the JSX syntax by React
             // as well.
 
             exclude: node_modules,
             loader: 'babel-loader',
-            query: {
+            options: {
                 // XXX The require.resolve bellow solves failures to locate the
                 // presets when lib-jitsi-meet, for example, is npm linked in
                 // jitsi-meet. The require.resolve, of course, mandates the use
                 // of the prefix babel-preset- in the preset names.
                 presets: [
-                    'babel-preset-es2015',
-                    'babel-preset-react',
-                    'babel-preset-stage-1'
-                ].map(require.resolve)
+                    [
+                        require.resolve('babel-preset-es2015'),
+
+                        // Tell babel to avoid compiling imports into CommonJS
+                        // so that webpack may do tree shaking.
+                        { modules: false }
+                    ],
+                    require.resolve('babel-preset-react'),
+                    require.resolve('babel-preset-stage-1')
+                ]
             },
             test: /\.jsx?$/
         }, {
@@ -107,28 +115,22 @@ var config = {
         }, {
             // Allow CSS to be imported into JavaScript.
 
-            loaders: [
+            test: /\.css$/,
+            use: [
                 'style-loader',
                 'css-loader'
-            ],
-            test: /\.css$/
+            ]
         }, {
             // Emit the static assets of AUI such as images that are referenced
             // by CSS into the output path.
 
             include: aui_css,
             loader: 'file-loader',
-            query: {
+            options: {
                 context: aui_css,
                 name: '[path][name].[ext]'
             },
             test: /\.(gif|png|svg)$/
-        }, {
-            // Enable the import of JSON files.
-
-            loader: 'json-loader',
-            exclude: node_modules,
-            test: /\.json$/
         } ],
         noParse: [
 
@@ -156,7 +158,20 @@ var config = {
         alias: {
             jquery: 'jquery/dist/jquery' + (minimize ? '.min' : '') + '.js'
         },
-        packageAlias: 'browser'
+        aliasFields: [
+            'browser'
+        ],
+        extensions: [
+            // Webpack 2 broke haste-resolver-webpack-plugin and I could not fix
+            // it. But given that there is resolve.extensions and the only
+            // non-default extension we have is .web.js, drop
+            // haste-resolver-webpack-plugin and go with resolve.extensions.
+            '.web.js',
+
+            // Webpack defaults:
+            '.js',
+            '.json'
+        ]
     }
 };
 
