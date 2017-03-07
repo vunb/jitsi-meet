@@ -5,6 +5,7 @@ import { connect as reactReduxConnect } from 'react-redux';
 
 import { connect, disconnect } from '../../base/connection';
 import { Watermarks } from '../../base/react';
+import { DialogContainer } from '../../base/dialog';
 import { FeedbackButton } from '../../feedback';
 import { OverlayContainer } from '../../overlay';
 import { HideNotificationBarStyle } from '../../unsupported-browser';
@@ -169,6 +170,7 @@ class Conference extends Component {
                                 src = 'sounds/left.wav' />
                         </div>
                     </div>
+                    <DialogContainer />
                 </div>
 
                 <OverlayContainer />
