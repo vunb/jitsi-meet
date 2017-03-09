@@ -1,3 +1,5 @@
+/* global interfaceConfig */
+
 import React, { Component } from 'react';
 
 /**
@@ -31,20 +33,46 @@ export default class OverlayFrame extends Component {
     }
 
     /**
+     * Initializes a new AbstractOverlay instance.
+     *
+     * @param {Object} props - The read-only properties with which the new
+     * instance is to be initialized.
+     * @public
+     */
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            /**
+             * Indicates whether the film strip only mode is enabled or not.
+             *
+             * @type {boolean}
+             */
+            filmStripOnly: interfaceConfig.filmStripOnly
+        };
+    }
+
+    /**
      * Implements React's {@link Component#render()}.
      *
      * @inheritdoc
      * @returns {ReactElement|null}
      */
     render() {
-        const containerClass = this.props.isLightOverlay
+        let containerClass = this.props.isLightOverlay
             ? 'overlay__container-light' : 'overlay__container';
+        let contentClass = 'overlay__content';
+
+        if (this.state.filmStripOnly) {
+            containerClass += ' filmstrip-only';
+            contentClass += ' filmstrip-only';
+        }
 
         return (
             <div
                 className = { containerClass }
                 id = 'overlay'>
-                <div className = 'overlay__content'>
+                <div className = { contentClass }>
                     {
                         this.props.children
                     }
